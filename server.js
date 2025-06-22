@@ -393,6 +393,7 @@ class NeetsAmpDirectBridge {
                     break;
                 case 'mix_mode_toggle':
                     this.sendToNeets(`SETTINGS=INPUT,INPUT=1,MIX=${this.deviceState.mixMode ? 'FALSE' : 'TRUE'}`);
+                    setTimeout(() => this.sendToNeets('SETTINGS=INPUT,INPUT=1,MIX=?'), 100);
                     break;
                 case 'mix_volume_up':
                     this.adjustMixVolume(1);
