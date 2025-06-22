@@ -385,7 +385,7 @@ class NeetsAmpDirectBridge {
                     break;
                 case 'mute_toggle':
                     this.sendToNeets(this.deviceState.mute ? 'MUTE=OFF' : 'MUTE=ON');
-                    setTimeout(() => this.sendToNeets('MUTE=?'), 100);
+                    setTimeout(() => this.sendToNeets('MUTE=?'), 250);
                     break;
                 case 'mute_on':
                     this.sendToNeets('MUTE=ON');
