@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Build outputs
+build/
+dist/
+*.log
+
+# Stream Deck build
+stream-deck-plugin/build/
+*.streamDeckPlugin
