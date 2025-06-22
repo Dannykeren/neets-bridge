@@ -532,3 +532,32 @@ process.on('SIGINT', () => {
     if (tcpClient) tcpClient.destroy();
     process.exit(0);
 });
+// GET endpoints for Stream Deck Website action
+app.get('/control/power/toggle', (req, res) => {
+    const newState = deviceState.power === 1 ? 'OFF' : 'ON';
+    sendNeetsCommand(`POWER=${newState}`);
+    res.send(`<h1>Power ${newState}</h1><script>setTimeout(() => window.close(), 1000);</script>`);
+});
+
+app.get('/control/volume/up', (req, res) => {
+    sendNeetsCommand(`VOL=${deviceState.volume + 1}`);
+    res.send(`<h1>Volume Up</h1><script>setTimeout(() => window.close(), 1000);</script>`);
+});
+
+app.get('/control/volume/down', (req, res) => {
+    sendNeetsCommand(`VOL=${deviceState.volume - 1}`);
+    res.send(`<h1>Volume Down</h1><script>setTimeout(() => window.close(), 1000);</script>`);
+});
+
+app.get('/control/source/:number', (req, res) => {
+    const source = parseInt(req.params.number);
+    sendNeetsCommand(`INPUT=${source}`);
+    res.send(`<h1>Source ${source}</h1><script>setTimeout(() => window.close(), 1000);</script>`);
+});
+
+app.get('/control/mute/toggle', (req, res) => {
+    const newState = deviceState.mute === 1 ? 'OFF' : 'ON';
+    sendNeetsCommand(`MUTE=${newState}`);
+    res.send(`<h1>Mute ${newState}</h1><script>setTimeout(() => window.close(), 1000);</script>`);
+});
+});
