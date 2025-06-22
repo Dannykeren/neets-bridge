@@ -386,6 +386,15 @@ class NeetsAmpDirectBridge {
                 case 'mute_toggle':
                     this.sendToNeets(this.deviceState.mute ? 'MUTE=OFF' : 'MUTE=ON');
                     setTimeout(() => this.sendToNeets('MUTE=?'), 250);
+                    // 1) flip local state
+                    const newMute = !this.deviceState.mute;
+                    this.deviceState.mute = newMute;
+                   // 2) tell the amp
+                   this.sendToNeets(newMute ? 'MUTE=ON' : 'MUTE=OFF');
+                   // 3) broadcast immediately so the key updates at once
+                   this.broadcastStateUpdate();
+                   // 4) ask the amp so we can confirm/correct a moment later
+    setTimeout(() => this.sendToNeets('MUTE=?'), 250);
                     break;
                 case 'mute_on':
                     this.sendToNeets('MUTE=ON');
