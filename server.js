@@ -560,4 +560,3 @@ app.get('/control/mute/toggle', (req, res) => {
     sendNeetsCommand(`MUTE=${newState}`);
     res.send(`<h1>Mute ${newState}</h1><script>setTimeout(() => window.close(), 1000);</script>`);
 });
-});
