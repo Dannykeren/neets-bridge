@@ -1,5 +1,3 @@
-cat > deploy.sh << 'EOF'
-{
 #!/bin/bash
 
 echo "🎵 Neets Bridge Deployment Script"
@@ -187,5 +185,3 @@ main() {
 main
 
 echo "Deploy script ready - edit as needed"
-}
-EOF
