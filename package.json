@@ -19,3 +19,4 @@ cat > package.json << 'EOF'
   "author": "Your Name",
   "license": "MIT"
 }
+EOF
