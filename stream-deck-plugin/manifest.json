@@ -1,0 +1,314 @@
+{
+  "Name": "NEETS Amp Control",
+  "Description": "Complete control interface for NEETS Amp 2:25 with real-time feedback",
+  "Category": "Audio Control",
+  "Author": "Danny Keren",
+  "Icon": "imgs/icon",
+  "URL": "https://github.com/Dannykeren/neets-bridge",
+  "Version": "2.0.0",
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.15"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "6.0"
+  },
+  "CodePath": "main.js",
+  "PropertyInspectorPath": "propertyinspector/index.html",
+  "Actions": [
+    {
+      "Name": "Power Control",
+      "UUID": "com.neets.amp.power",
+      "Icon": "imgs/power",
+      "Tooltip": "Toggle amplifier power with status feedback",
+      "States": [
+        {
+          "Image": "imgs/power_off",
+          "Name": "Power Off"
+        },
+        {
+          "Image": "imgs/power_on",
+          "Name": "Power On"
+        }
+      ],
+      "PropertyInspectorPath": "propertyinspector/power.html"
+    },
+    {
+      "Name": "Source 1",
+      "UUID": "com.neets.amp.source1",
+      "Icon": "imgs/source1",
+      "Tooltip": "Select Source 1",
+      "States": [
+        {
+          "Image": "imgs/source1_off",
+          "Name": "Source 1 Inactive"
+        },
+        {
+          "Image": "imgs/source1_on",
+          "Name": "Source 1 Active"
+        }
+      ]
+    },
+    {
+      "Name": "Source 2",
+      "UUID": "com.neets.amp.source2",
+      "Icon": "imgs/source2",
+      "Tooltip": "Select Source 2",
+      "States": [
+        {
+          "Image": "imgs/source2_off",
+          "Name": "Source 2 Inactive"
+        },
+        {
+          "Image": "imgs/source2_on",
+          "Name": "Source 2 Active"
+        }
+      ]
+    },
+    {
+      "Name": "Source 3",
+      "UUID": "com.neets.amp.source3",
+      "Icon": "imgs/source3",
+      "Tooltip": "Select Source 3",
+      "States": [
+        {
+          "Image": "imgs/source3_off",
+          "Name": "Source 3 Inactive"
+        },
+        {
+          "Image": "imgs/source3_on",
+          "Name": "Source 3 Active"
+        }
+      ]
+    },
+    {
+      "Name": "Source 4",
+      "UUID": "com.neets.amp.source4",
+      "Icon": "imgs/source4",
+      "Tooltip": "Select Source 4",
+      "States": [
+        {
+          "Image": "imgs/source4_off",
+          "Name": "Source 4 Inactive"
+        },
+        {
+          "Image": "imgs/source4_on",
+          "Name": "Source 4 Active"
+        }
+      ]
+    },
+    {
+      "Name": "Source 5",
+      "UUID": "com.neets.amp.source5",
+      "Icon": "imgs/source5",
+      "Tooltip": "Select Source 5",
+      "States": [
+        {
+          "Image": "imgs/source5_off",
+          "Name": "Source 5 Inactive"
+        },
+        {
+          "Image": "imgs/source5_on",
+          "Name": "Source 5 Active"
+        }
+      ]
+    },
+    {
+      "Name": "Volume Up",
+      "UUID": "com.neets.amp.volume.up",
+      "Icon": "imgs/volume_up",
+      "Tooltip": "Increase volume"
+    },
+    {
+      "Name": "Volume Down",
+      "UUID": "com.neets.amp.volume.down",
+      "Icon": "imgs/volume_down",
+      "Tooltip": "Decrease volume"
+    },
+    {
+      "Name": "Volume Display",
+      "UUID": "com.neets.amp.volume.display",
+      "Icon": "imgs/volume_display",
+      "Tooltip": "Show current volume, press to toggle mute",
+      "States": [
+        {
+          "Image": "imgs/volume_display",
+          "Name": "Volume Normal"
+        },
+        {
+          "Image": "imgs/volume_display",
+          "Name": "Volume Normal"
+        },
+        {
+          "Image": "imgs/volume_muted",
+          "Name": "Volume Muted"
+        }
+      ]
+    },
+    {
+      "Name": "Mute Toggle",
+      "UUID": "com.neets.amp.mute",
+      "Icon": "imgs/mute",
+      "Tooltip": "Toggle main mute",
+      "States": [
+        {
+          "Image": "imgs/mute_off",
+          "Name": "Not Muted"
+        },
+        {
+          "Image": "imgs/mute_on",
+          "Name": "Muted"
+        }
+      ]
+    },
+    {
+      "Name": "Mix Mode Toggle",
+      "UUID": "com.neets.amp.mixmode",
+      "Icon": "imgs/mixmode",
+      "Tooltip": "Toggle mix mode",
+      "States": [
+        {
+          "Image": "imgs/mixmode_off",
+          "Name": "Mix Mode Off"
+        },
+        {
+          "Image": "imgs/mixmode_on",
+          "Name": "Mix Mode On"
+        }
+      ]
+    },
+    {
+      "Name": "Mix Volume Up",
+      "UUID": "com.neets.amp.mixvolume.up",
+      "Icon": "imgs/mixvolume_up",
+      "Tooltip": "Increase mix volume"
+    },
+    {
+      "Name": "Mix Volume Down",
+      "UUID": "com.neets.amp.mixvolume.down",
+      "Icon": "imgs/mixvolume_down",
+      "Tooltip": "Decrease mix volume"
+    },
+    {
+      "Name": "Mix Volume Display",
+      "UUID": "com.neets.amp.mixvolume.display",
+      "Icon": "imgs/mixvolume_display",
+      "Tooltip": "Show current mix volume, press to toggle mix mute",
+      "States": [
+        {
+          "Image": "imgs/mixvolume_display",
+          "Name": "Mix Volume Normal"
+        },
+        {
+          "Image": "imgs/mixvolume_display",
+          "Name": "Mix Volume Normal"
+        },
+        {
+          "Image": "imgs/mixvolume_muted",
+          "Name": "Mix Volume Muted"
+        }
+      ]
+    },
+    {
+      "Name": "Mix Mute Toggle",
+      "UUID": "com.neets.amp.mixmute",
+      "Icon": "imgs/mixmute",
+      "Tooltip": "Toggle mix mute",
+      "States": [
+        {
+          "Image": "imgs/mixmute_off",
+          "Name": "Mix Not Muted"
+        },
+        {
+          "Image": "imgs/mixmute_on",
+          "Name": "Mix Muted"
+        }
+      ]
+    },
+    {
+      "Name": "Input 1 Gain Up",
+      "UUID": "com.neets.amp.input1.gain.up",
+      "Icon": "imgs/input1_gain_up",
+      "Tooltip": "Increase Input 1 gain"
+    },
+    {
+      "Name": "Input 1 Gain Down",
+      "UUID": "com.neets.amp.input1.gain.down",
+      "Icon": "imgs/input1_gain_down",
+      "Tooltip": "Decrease Input 1 gain"
+    },
+    {
+      "Name": "Input 1 Gain Display",
+      "UUID": "com.neets.amp.input1.gain.display",
+      "Icon": "imgs/input1_gain_display",
+      "Tooltip": "Show Input 1 gain level"
+    },
+    {
+      "Name": "Input 2 Gain Up",
+      "UUID": "com.neets.amp.input2.gain.up",
+      "Icon": "imgs/input2_gain_up",
+      "Tooltip": "Increase Input 2 gain"
+    },
+    {
+      "Name": "Input 2 Gain Down",
+      "UUID": "com.neets.amp.input2.gain.down",
+      "Icon": "imgs/input2_gain_down",
+      "Tooltip": "Decrease Input 2 gain"
+    },
+    {
+      "Name": "Input 2 Gain Display",
+      "UUID": "com.neets.amp.input2.gain.display",
+      "Icon": "imgs/input2_gain_display",
+      "Tooltip": "Show Input 2 gain level"
+    },
+    {
+      "Name": "Input 3 Gain Up",
+      "UUID": "com.neets.amp.input3.gain.up",
+      "Icon": "imgs/input3_gain_up",
+      "Tooltip": "Increase Input 3 gain"
+    },
+    {
+      "Name": "Input 3 Gain Down",
+      "UUID": "com.neets.amp.input3.gain.down",
+      "Icon": "imgs/input3_gain_down",
+      "Tooltip": "Decrease Input 3 gain"
+    },
+    {
+      "Name": "Input 3 Gain Display",
+      "UUID": "com.neets.amp.input3.gain.display",
+      "Icon": "imgs/input3_gain_display",
+      "Tooltip": "Show Input 3 gain level"
+    },
+    {
+      "Name": "Input 4 Gain Up",
+      "UUID": "com.neets.amp.input4.gain.up",
+      "Icon": "imgs/input4_gain_up",
+      "Tooltip": "Increase Input 4 gain"
+    },
+    {
+      "Name": "Input 4 Gain Down",
+      "UUID": "com.neets.amp.input4.gain.down",
+      "Icon": "imgs/input4_gain_down",
+      "Tooltip": "Decrease Input 4 gain"
+    },
+    {
+      "Name": "Input 4 Gain Display",
+      "UUID": "com.neets.amp.input4.gain.display",
+      "Icon": "imgs/input4_gain_display",
+      "Tooltip": "Show Input 4 gain level"
+    },
+    {
+      "Name": "EQ Low Up",
+      "UUID": "com.neets.amp.eq.low.up",
+      "Icon": "imgs/eq_low_up",
+      "Tooltip": "Increase low frequency EQ"
+    },
+    {
+      "Name": "EQ Low Down",
+      "UUID": "com.neets.amp
