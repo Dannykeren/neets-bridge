@@ -16,7 +16,7 @@ cat > package.json << 'EOF'
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "author": "Your Name",
+  "author": "Danny "The Digital Cub" Keren",
   "license": "MIT"
 }
 EOF
