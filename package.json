@@ -16,7 +16,7 @@
     "docker:run": "docker run -p 8080:8080 -p 3000:3000 neets-bridge",
     "docker:compose": "docker-compose up -d",
     "docker:logs": "docker-compose logs -f neets-bridge",
-    "health": "node healthcheck.js"
+    "health": "node healthcheck.js",
     "build-plugin": "cd stream-deck-plugin && node build.js",
     "install-plugin": "npm run build-plugin && npm run copy-plugin", 
     "copy-plugin": "node scripts/install-plugin.js"
