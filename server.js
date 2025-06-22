@@ -1,5 +1,3 @@
-cat > server.js << 'EOF'
-{
 javascriptconst express = require('express');
 const net = require('net');
 const cors = require('cors');
@@ -534,5 +532,3 @@ process.on('SIGINT', () => {
     if (tcpClient) tcpClient.destroy();
     process.exit(0);
 });
-}
-EOF
