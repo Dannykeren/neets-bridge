@@ -1,506 +1,500 @@
-// main.js - Stream Deck Plugin with proper feedback handling
-import streamDeck from '@elgato/streamdeck';
+/**
+ * NEETS Bridge Stream Deck Plugin
+ * Professional control for NEETS Amp systems
+ */
 
-let websocket = null;
-let deviceState = {
-    connected: false,
-    power: false,
-    source: 0,
-    volume: 0,
-    volumeDb: '0dB',
-    volumePercent: '0%',
-    mute: false,
-    mixMode: false,
-    mixVolume: 0,
-    mixVolumeDb: '0dB',
-    mixVolumePercent: '0%',
-    mixMute: false,
-    inputGains: [0, 0, 0, 0],
-    inputGainsDb: ['0dB', '0dB', '0dB', '0dB'],
-    inputGainsPercent: ['0%', '0%', '0%', '0%'],
-    eqLow: '0dB',
-    eqMid: '0dB',
-    eqHigh: '0dB'
-};
+// Global variables
+let streamDeckWebSocket = null;
+let neetsWebSocket = null;
+let currentState = {};
+let buttonContexts = {};
+let reconnectInterval = null;
+let heartbeatInterval = null;
+let debugMode = false;
 
-let reconnectTimer = null;
-let reconnectAttempts = 0;
-const maxReconnectAttempts = 10;
+// Plugin initialization
+function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, inInfo) {
+    log('Initializing NEETS Bridge Plugin...');
+    
+    // Parse info
+    const info = JSON.parse(inInfo);
+    debugMode = info.application?.version ? true : false;
+    
+    // Connect to Stream Deck
+    streamDeckWebSocket = new WebSocket('ws://localhost:' + inPort);
+    
+    streamDeckWebSocket.onopen = function() {
+        log('✅ Connected to Stream Deck');
+        register(inPluginUUID, inRegisterEvent);
+        startHeartbeat();
+    };
+    
+    streamDeckWebSocket.onmessage = function(evt) {
+        try {
+            const jsonObj = JSON.parse(evt.data);
+            handleStreamDeckMessage(jsonObj);
+        } catch (error) {
+            log('❌ Error parsing Stream Deck message:', error);
+        }
+    };
+    
+    streamDeckWebSocket.onclose = function() {
+        log('❌ Stream Deck connection closed');
+        stopHeartbeat();
+    };
+    
+    streamDeckWebSocket.onerror = function(error) {
+        log('❌ Stream Deck connection error:', error);
+    };
+}
 
-// WebSocket connection management
-function connectWebSocket() {
-    const bridgeUrl = 'ws://localhost:8080'; // Adjust if running on different host
+// Register plugin with Stream Deck
+function register(inPluginUUID, inRegisterEvent) {
+    const json = {
+        event: inRegisterEvent,
+        uuid: inPluginUUID
+    };
+    sendToStreamDeck(json);
+    log('📝 Registered with Stream Deck');
+}
+
+// Handle messages from Stream Deck
+function handleStreamDeckMessage(jsonObj) {
+    const event = jsonObj.event;
+    
+    switch(event) {
+        case 'keyDown':
+            handleKeyDown(jsonObj);
+            break;
+        case 'keyUp':
+            handleKeyUp(jsonObj);
+            break;
+        case 'willAppear':
+            handleWillAppear(jsonObj);
+            break;
+        case 'willDisappear':
+            handleWillDisappear(jsonObj);
+            break;
+        case 'didReceiveSettings':
+            handleDidReceiveSettings(jsonObj);
+            break;
+        case 'applicationDidLaunch':
+            log('📱 Stream Deck application launched');
+            break;
+        case 'applicationDidTerminate':
+            log('📱 Stream Deck application terminated');
+            break;
+        default:
+            log('🔸 Unhandled Stream Deck event:', event);
+    }
+}
+
+// Handle button press
+function handleKeyDown(jsonObj) {
+    const context = jsonObj.context;
+    const action = jsonObj.action;
+    const settings = jsonObj.payload?.settings || {};
+    
+    log(`🔽 Button pressed: ${action}`);
+    
+    // Ensure NEETS connection
+    ensureNEETSConnection(settings);
+    
+    // Handle different actions
+    switch(action) {
+        case 'com.neets.bridge.power':
+            sendNEETSCommand({ action: 'power_toggle' });
+            break;
+            
+        case 'com.neets.bridge.volume':
+            const volumeAction = settings.volumeAction || 'volume_up';
+            sendNEETSCommand({ action: volumeAction });
+            break;
+            
+        case 'com.neets.bridge.mute':
+            sendNEETSCommand({ action: 'mute_toggle' });
+            break;
+            
+        case 'com.neets.bridge.source':
+            const source = parseInt(settings.source) || 1;
+            sendNEETSCommand({ action: 'source_select', source: source });
+            break;
+            
+        case 'com.neets.bridge.status':
+            sendNEETSCommand({ action: 'get_state' });
+            break;
+            
+        case 'com.neets.bridge.mix':
+            sendNEETSCommand({ action: 'mix_mode_toggle' });
+            break;
+            
+        default:
+            log('🔸 Unhandled action:', action);
+    }
+}
+
+// Handle button release
+function handleKeyUp(jsonObj) {
+    // Currently no specific key up actions
+}
+
+// Handle button appearing on Stream Deck
+function handleWillAppear(jsonObj) {
+    const context = jsonObj.context;
+    const action = jsonObj.action;
+    const settings = jsonObj.payload?.settings || {};
+    
+    log(`👁️ Button appeared: ${action}`);
+    
+    // Store button context
+    buttonContexts[context] = {
+        action: action,
+        settings: settings
+    };
+    
+    // Connect to NEETS Bridge
+    ensureNEETSConnection(settings);
+    
+    // Request initial state
+    setTimeout(() => {
+        sendNEETSCommand({ action: 'get_state' });
+    }, 1000);
+}
+
+// Handle button disappearing from Stream Deck
+function handleWillDisappear(jsonObj) {
+    const context = jsonObj.context;
+    delete buttonContexts[context];
+    log(`👁️‍🗨️ Button disappeared: ${context}`);
+}
+
+// Handle settings update
+function handleDidReceiveSettings(jsonObj) {
+    const context = jsonObj.context;
+    const settings = jsonObj.payload?.settings || {};
+    
+    if (buttonContexts[context]) {
+        buttonContexts[context].settings = settings;
+        log('⚙️ Settings updated for context:', context);
+        
+        // Reconnect if connection settings changed
+        if (settings.neetsHost || settings.neetsPort) {
+            disconnectFromNEETS();
+            ensureNEETSConnection(settings);
+        }
+    }
+}
+
+// Ensure connection to NEETS Bridge
+function ensureNEETSConnection(settings) {
+    if (neetsWebSocket && neetsWebSocket.readyState === WebSocket.OPEN) {
+        return; // Already connected
+    }
+    
+    if (neetsWebSocket && neetsWebSocket.readyState === WebSocket.CONNECTING) {
+        return; // Already connecting
+    }
+    
+    connectToNEETSBridge(settings);
+}
+
+// Connect to NEETS Bridge WebSocket
+function connectToNEETSBridge(settings) {
+    // Get connection details from settings or use defaults
+    const host = settings.neetsHost || getDefaultHost();
+    const port = settings.neetsPort || '8080';
+    const wsUrl = `ws://${host}:${port}`;
+    
+    log(`🔌 Connecting to NEETS Bridge: ${wsUrl}`);
     
     try {
-        websocket = new WebSocket(bridgeUrl);
+        neetsWebSocket = new WebSocket(wsUrl);
         
-        websocket.onopen = () => {
-            console.log('Connected to NEETS bridge');
-            reconnectAttempts = 0;
-            updateAllActionStates();
+        neetsWebSocket.onopen = function() {
+            log('✅ Connected to NEETS Bridge');
+            clearInterval(reconnectInterval);
+            updateAllButtonsConnectionStatus(true);
             
-            // Request current state
-            sendMessage({ action: 'get_state' });
+            // Request initial status
+            setTimeout(() => {
+                sendNEETSCommand({ action: 'get_state' });
+            }, 500);
         };
         
-        websocket.onmessage = (event) => {
+        neetsWebSocket.onmessage = function(evt) {
             try {
-                const data = JSON.parse(event.data);
-                handleBridgeMessage(data);
+                const data = JSON.parse(evt.data);
+                handleNEETSMessage(data);
             } catch (error) {
-                console.error('Error parsing bridge message:', error);
+                log('❌ Error parsing NEETS message:', error);
             }
         };
         
-        websocket.onclose = () => {
-            console.log('Disconnected from NEETS bridge');
-            websocket = null;
-            scheduleReconnect();
+        neetsWebSocket.onclose = function(event) {
+            log(`❌ NEETS Bridge disconnected (${event.code})`);
+            updateAllButtonsConnectionStatus(false);
+            scheduleReconnect(settings);
         };
         
-        websocket.onerror = (error) => {
-            console.error('WebSocket error:', error);
+        neetsWebSocket.onerror = function(error) {
+            log('❌ NEETS Bridge connection error:', error);
+            updateAllButtonsConnectionStatus(false);
         };
         
     } catch (error) {
-        console.error('Failed to create WebSocket connection:', error);
-        scheduleReconnect();
+        log('❌ Failed to create WebSocket connection:', error);
+        scheduleReconnect(settings);
     }
 }
 
-function scheduleReconnect() {
-    if (reconnectAttempts < maxReconnectAttempts) {
-        reconnectAttempts++;
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000); // Exponential backoff
-        
-        console.log(`Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts})`);
-        
-        reconnectTimer = setTimeout(() => {
-            connectWebSocket();
-        }, delay);
+// Disconnect from NEETS Bridge
+function disconnectFromNEETS() {
+    if (neetsWebSocket) {
+        neetsWebSocket.close();
+        neetsWebSocket = null;
     }
+    clearInterval(reconnectInterval);
 }
 
-function sendMessage(message) {
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify(message));
-        return true;
-    }
-    console.warn('Cannot send message: WebSocket not connected');
-    return false;
-}
-
-function handleBridgeMessage(data) {
-    switch (data.type) {
-        case 'state_update':
-            deviceState = { ...deviceState, ...data.state };
-            updateAllActionStates();
-            break;
-        case 'error':
-            console.error('Bridge error:', data.message);
-            break;
-    }
-}
-
-function updateAllActionStates() {
-    // Update all registered actions with current state
-    streamDeck.actions.getAllInstances().forEach(action => {
-        updateActionDisplay(action);
-    });
-}
-
-function updateActionDisplay(action) {
-    const settings = action.getSettings();
-    const actionType = settings.actionType;
+// Schedule reconnection attempt
+function scheduleReconnect(settings) {
+    if (reconnectInterval) return; // Already scheduled
     
-    switch (actionType) {
-        case 'power':
-            updatePowerAction(action);
-            break;
-        case 'source':
-            updateSourceAction(action, settings.sourceNumber);
-            break;
-        case 'volume':
-            updateVolumeAction(action);
-            break;
-        case 'mute':
-            updateMuteAction(action);
-            break;
-        case 'mix_mode':
-            updateMixModeAction(action);
-            break;
-        case 'mix_volume':
-            updateMixVolumeAction(action);
-            break;
-        case 'mix_mute':
-            updateMixMuteAction(action);
-            break;
-        case 'input_gain':
-            updateInputGainAction(action, settings.inputNumber);
-            break;
-        case 'eq':
-            updateEqAction(action, settings.band);
-            break;
-    }
-}
-
-function updatePowerAction(action) {
-    const isOn = deviceState.connected && deviceState.power;
-    action.setState(isOn ? 1 : 0);
-    action.setTitle(isOn ? 'Power\nON' : 'Power\nOFF');
-}
-
-function updateSourceAction(action, sourceNumber) {
-    const isActive = deviceState.source === sourceNumber;
-    action.setState(isActive ? 1 : 0);
-    action.setTitle(`Source\n${sourceNumber}${isActive ? '\n●' : ''}`);
-}
-
-function updateVolumeAction(action) {
-    const volumeText = `Volume\n${deviceState.volumeDb}\n${deviceState.volumePercent}`;
-    action.setTitle(volumeText);
-    action.setState(deviceState.mute ? 2 : 0); // Different state for muted
-}
-
-function updateMuteAction(action) {
-    action.setState(deviceState.mute ? 1 : 0);
-    action.setTitle(deviceState.mute ? 'MUTED' : 'Mute');
-}
-
-function updateMixModeAction(action) {
-    action.setState(deviceState.mixMode ? 1 : 0);
-    action.setTitle(deviceState.mixMode ? 'Mix\nON' : 'Mix\nOFF');
-}
-
-function updateMixVolumeAction(action) {
-    const volumeText = `Mix Vol\n${deviceState.mixVolumeDb}\n${deviceState.mixVolumePercent}`;
-    action.setTitle(volumeText);
-    action.setState(deviceState.mixMute ? 2 : 0);
-}
-
-function updateMixMuteAction(action) {
-    action.setState(deviceState.mixMute ? 1 : 0);
-    action.setTitle(deviceState.mixMute ? 'Mix\nMUTED' : 'Mix\nMute');
-}
-
-function updateInputGainAction(action, inputNumber) {
-    const inputIndex = inputNumber - 1;
-    if (inputIndex >= 0 && inputIndex < 4) {
-        const gainText = `In${inputNumber}\n${deviceState.inputGainsDb[inputIndex]}\n${deviceState.inputGainsPercent[inputIndex]}`;
-        action.setTitle(gainText);
-    }
-}
-
-function updateEqAction(action, band) {
-    let eqValue = '0dB';
-    switch (band) {
-        case 'low':
-            eqValue = deviceState.eqLow;
-            break;
-        case 'mid':
-            eqValue = deviceState.eqMid;
-            break;
-        case 'high':
-            eqValue = deviceState.eqHigh;
-            break;
-    }
-    action.setTitle(`EQ ${band.toUpperCase()}\n${eqValue}`);
-}
-
-// Action registrations with proper feedback handling
-
-// Power Control
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.power')
-    .onWillAppear(({ action }) => {
-        action.setSettings({ actionType: 'power' });
-        updatePowerAction(action);
-    })
-    .onKeyDown(({ action }) => {
-        const settings = action.getSettings();
-        if (settings.toggleMode) {
-            sendMessage({ action: 'power_toggle' });
-        } else {
-            sendMessage({ action: deviceState.power ? 'power_off' : 'power_on' });
-        }
-    })
-);
-
-// Source Selection (1-5)
-for (let i = 1; i <= 5; i++) {
-    streamDeck.actions.registerAction(new streamDeck.Action(`com.neets.amp.source${i}`)
-        .onWillAppear(({ action }) => {
-            action.setSettings({ actionType: 'source', sourceNumber: i });
-            updateSourceAction(action, i);
-        })
-        .onKeyDown(() => {
-            sendMessage({ action: 'source_select', source: i });
-        })
-    );
-}
-
-// Volume Control
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.volume.up')
-    .onWillAppear(({ action }) => {
-        action.setSettings({ actionType: 'volume' });
-        action.setTitle('Volume\nUP');
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'volume_up' });
-    })
-);
-
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.volume.down')
-    .onWillAppear(({ action }) => {
-        action.setSettings({ actionType: 'volume' });
-        action.setTitle('Volume\nDOWN');
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'volume_down' });
-    })
-);
-
-// Volume Display with Mute Toggle
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.volume.display')
-    .onWillAppear(({ action }) => {
-        action.setSettings({ actionType: 'volume' });
-        updateVolumeAction(action);
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'mute_toggle' });
-    })
-);
-
-// Dedicated Mute Button
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.mute')
-    .onWillAppear(({ action }) => {
-        action.setSettings({ actionType: 'mute' });
-        updateMuteAction(action);
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'mute_toggle' });
-    })
-);
-
-// Mix Mode Toggle
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.mixmode')
-    .onWillAppear(({ action }) => {
-        action.setSettings({ actionType: 'mix_mode' });
-        updateMixModeAction(action);
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'mix_mode_toggle' });
-    })
-);
-
-// Mix Volume Control
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.mixvolume.up')
-    .onWillAppear(({ action }) => {
-        action.setTitle('Mix Vol\nUP');
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'mix_volume_up' });
-    })
-);
-
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.mixvolume.down')
-    .onWillAppear(({ action }) => {
-        action.setTitle('Mix Vol\nDOWN');
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'mix_volume_down' });
-    })
-);
-
-// Mix Volume Display with Mute Toggle
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.mixvolume.display')
-    .onWillAppear(({ action }) => {
-        action.setSettings({ actionType: 'mix_volume' });
-        updateMixVolumeAction(action);
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'mix_mute_toggle' });
-    })
-);
-
-// Mix Mute
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.mixmute')
-    .onWillAppear(({ action }) => {
-        action.setSettings({ actionType: 'mix_mute' });
-        updateMixMuteAction(action);
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'mix_mute_toggle' });
-    })
-);
-
-// Input Gain Controls (1-4)
-for (let i = 1; i <= 4; i++) {
-    // Gain Up
-    streamDeck.actions.registerAction(new streamDeck.Action(`com.neets.amp.input${i}.gain.up`)
-        .onWillAppear(({ action }) => {
-            action.setTitle(`In${i} Gain\nUP`);
-        })
-        .onKeyDown(() => {
-            sendMessage({ action: 'input_gain_up', input: i });
-        })
-    );
-
-    // Gain Down
-    streamDeck.actions.registerAction(new streamDeck.Action(`com.neets.amp.input${i}.gain.down`)
-        .onWillAppear(({ action }) => {
-            action.setTitle(`In${i} Gain\nDOWN`);
-        })
-        .onKeyDown(() => {
-            sendMessage({ action: 'input_gain_down', input: i });
-        })
-    );
-
-    // Gain Display
-    streamDeck.actions.registerAction(new streamDeck.Action(`com.neets.amp.input${i}.gain.display`)
-        .onWillAppear(({ action }) => {
-            action.setSettings({ actionType: 'input_gain', inputNumber: i });
-            updateInputGainAction(action, i);
-        })
-        .onKeyDown(() => {
-            // Optional: Could implement gain reset or other function
-            console.log(`Input ${i} gain display pressed`);
-        })
-    );
-}
-
-// EQ Controls
-const eqBands = ['low', 'mid', 'high'];
-eqBands.forEach(band => {
-    // EQ Up
-    streamDeck.actions.registerAction(new streamDeck.Action(`com.neets.amp.eq.${band}.up`)
-        .onWillAppear(({ action }) => {
-            action.setTitle(`EQ ${band.toUpperCase()}\nUP`);
-        })
-        .onKeyDown(() => {
-            sendMessage({ action: 'eq_adjust', band: band, direction: 'up' });
-        })
-    );
-
-    // EQ Down
-    streamDeck.actions.registerAction(new streamDeck.Action(`com.neets.amp.eq.${band}.down`)
-        .onWillAppear(({ action }) => {
-            action.setTitle(`EQ ${band.toUpperCase()}\nDOWN`);
-        })
-        .onKeyDown(() => {
-            sendMessage({ action: 'eq_adjust', band: band, direction: 'down' });
-        })
-    );
-
-    // EQ Display
-    streamDeck.actions.registerAction(new streamDeck.Action(`com.neets.amp.eq.${band}.display`)
-        .onWillAppear(({ action }) => {
-            action.setSettings({ actionType: 'eq', band: band });
-            updateEqAction(action, band);
-        })
-        .onKeyDown(() => {
-            // Optional: Could implement EQ reset
-            console.log(`EQ ${band} display pressed`);
-        })
-    );
-});
-
-// Connection Status Action
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.status')
-    .onWillAppear(({ action }) => {
-        updateConnectionStatus(action);
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'poll_status' });
-    })
-);
-
-function updateConnectionStatus(action) {
-    const isConnected = deviceState.connected;
-    action.setState(isConnected ? 1 : 0);
-    action.setTitle(isConnected ? 'NEETS\nCONNECTED' : 'NEETS\nDISCONNECTED');
-}
-
-// Utility Actions
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.refresh')
-    .onWillAppear(({ action }) => {
-        action.setTitle('Refresh\nStatus');
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'poll_status' });
-        // Also request fresh state
-        setTimeout(() => {
-            sendMessage({ action: 'get_state' });
-        }, 500);
-    })
-);
-
-// Advanced Volume Slider (if Stream Deck supports encoders)
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.volume.slider')
-    .onWillAppear(({ action }) => {
-        action.setSettings({ actionType: 'volume' });
-        updateVolumeAction(action);
-    })
-    .onDialRotate(({ action, payload }) => {
-        // For Stream Deck devices with encoders
-        const currentVolume = deviceState.volume;
-        const step = payload.ticks * 1; // Adjust sensitivity
-        const newVolume = Math.max(-70, Math.min(12, currentVolume + step));
+    let attempts = 0;
+    const maxAttempts = 10;
+    const baseDelay = 5000; // 5 seconds
+    
+    reconnectInterval = setInterval(() => {
+        attempts++;
         
-        sendMessage({ action: 'volume_set', value: newVolume });
-    })
-    .onKeyDown(() => {
-        sendMessage({ action: 'mute_toggle' });
-    })
-);
+        if (attempts > maxAttempts) {
+            log('❌ Max reconnection attempts reached');
+            clearInterval(reconnectInterval);
+            reconnectInterval = null;
+            return;
+        }
+        
+        const delay = Math.min(baseDelay * Math.pow(2, attempts - 1), 60000); // Exponential backoff, max 1 minute
+        log(`🔄 Reconnection attempt ${attempts}/${maxAttempts} in ${delay/1000}s`);
+        
+        setTimeout(() => {
+            connectToNEETSBridge(settings);
+        }, delay);
+        
+    }, 1000);
+}
 
-// Preset Configurations
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.preset.meeting')
-    .onWillAppear(({ action }) => {
-        action.setTitle('Meeting\nPreset');
-    })
-    .onKeyDown(() => {
-        // Example preset for meeting room
-        sendMessage({ action: 'power_on' });
-        setTimeout(() => sendMessage({ action: 'source_select', source: 1 }), 200);
-        setTimeout(() => sendMessage({ action: 'volume_set', value: -20 }), 400);
-        setTimeout(() => sendMessage({ action: 'mute_off' }), 600);
-    })
-);
+// Send command to NEETS Bridge
+function sendNEETSCommand(command) {
+    if (neetsWebSocket && neetsWebSocket.readyState === WebSocket.OPEN) {
+        const commandStr = JSON.stringify(command);
+        neetsWebSocket.send(commandStr);
+        log(`📤 Sent to NEETS: ${commandStr}`);
+    } else {
+        log('❌ Cannot send command - NEETS Bridge not connected');
+    }
+}
 
-streamDeck.actions.registerAction(new streamDeck.Action('com.neets.amp.preset.presentation')
-    .onWillAppear(({ action }) => {
-        action.setTitle('Present\nPreset');
-    })
-    .onKeyDown(() => {
-        // Example preset for presentation
-        sendMessage({ action: 'power_on' });
-        setTimeout(() => sendMessage({ action: 'source_select', source: 2 }), 200);
-        setTimeout(() => sendMessage({ action: 'volume_set', value: -10 }), 400);
-        setTimeout(() => sendMessage({ action: 'mute_off' }), 600);
-    })
-);
+// Handle NEETS Bridge responses
+function handleNEETSMessage(data) {
+    log(`📥 Received from NEETS:`, data);
+    
+    if (data.type === 'state_update') {
+        currentState = { ...currentState, ...data.state };
+        updateAllButtons();
+    } else if (data.type === 'response') {
+        // Handle specific responses
+        log('📋 NEETS Response:', data);
+    } else if (data.type === 'error') {
+        log('❌ NEETS Error:', data.message);
+    }
+}
 
-// Initialize connection when plugin loads
-streamDeck.onConnected(() => {
-    console.log('Stream Deck connected, initializing NEETS bridge connection');
-    connectWebSocket();
+// Update all Stream Deck buttons
+function updateAllButtons() {
+    for (const context in buttonContexts) {
+        const buttonInfo = buttonContexts[context];
+        updateButton(context, buttonInfo.action, buttonInfo.settings);
+    }
+}
+
+// Update specific button based on current state
+function updateButton(context, action, settings) {
+    switch(action) {
+        case 'com.neets.bridge.power':
+            updatePowerButton(context);
+            break;
+        case 'com.neets.bridge.volume':
+            updateVolumeButton(context, settings);
+            break;
+        case 'com.neets.bridge.mute':
+            updateMuteButton(context);
+            break;
+        case 'com.neets.bridge.source':
+            updateSourceButton(context, settings);
+            break;
+        case 'com.neets.bridge.status':
+            updateStatusButton(context);
+            break;
+        case 'com.neets.bridge.mix':
+            updateMixButton(context);
+            break;
+    }
+}
+
+// Update power button
+function updatePowerButton(context) {
+    const state = currentState.power ? 1 : 0;
+    const title = currentState.power ? 'ON' : 'OFF';
+    
+    setButtonState(context, state);
+    setButtonTitle(context, title);
+}
+
+// Update volume button
+function updateVolumeButton(context, settings) {
+    const volumeAction = settings.volumeAction || 'volume_up';
+    const volumeText = currentState.volumeDb || '0dB';
+    const volumePercent = currentState.volumePercent || 0;
+    
+    const title = `${volumeAction === 'volume_up' ? '▲' : '▼'}\n${volumeText}\n${volumePercent}%`;
+    setButtonTitle(context, title);
+}
+
+// Update mute button
+function updateMuteButton(context) {
+    const state = currentState.mute ? 1 : 0;
+    const title = currentState.mute ? 'MUTED' : '';
+    
+    setButtonState(context, state);
+    setButtonTitle(context, title);
+}
+
+// Update source button
+function updateSourceButton(context, settings) {
+    const targetSource = parseInt(settings.source) || 1;
+    const currentSource = currentState.source || 0;
+    const isActive = currentSource === targetSource;
+    
+    setButtonState(context, isActive ? 1 : 0);
+    setButtonTitle(context, `SRC ${targetSource}${isActive ? '\n●' : ''}`);
+}
+
+// Update status button
+function updateStatusButton(context) {
+    const connected = neetsWebSocket && neetsWebSocket.readyState === WebSocket.OPEN;
+    const connectionIcon = connected ? '🟢' : '🔴';
+    const power = currentState.power ? 'ON' : 'OFF';
+    const volume = currentState.volumeDb || '0dB';
+    const source = currentState.source || '?';
+    
+    const title = `${connectionIcon}\n${power}\nVol: ${volume}\nSrc: ${source}`;
+    setButtonTitle(context, title);
+}
+
+// Update mix button
+function updateMixButton(context) {
+    const state = currentState.mixMode ? 1 : 0;
+    const title = currentState.mixMode ? 'MIX ON' : 'MIX OFF';
+    
+    setButtonState(context, state);
+    setButtonTitle(context, title);
+}
+
+// Update connection status for all buttons
+function updateAllButtonsConnectionStatus(connected) {
+    // This can be used to show/hide connection indicators
+    log(`🔗 Connection status changed: ${connected ? 'Connected' : 'Disconnected'}`);
+}
+
+// Utility functions for Stream Deck communication
+function setButtonState(context, state) {
+    const json = {
+        event: 'setState',
+        context: context,
+        payload: {
+            state: state
+        }
+    };
+    sendToStreamDeck(json);
+}
+
+function setButtonTitle(context, title) {
+    const json = {
+        event: 'setTitle',
+        context: context,
+        payload: {
+            title: title,
+            target: 0 // Hardware and software
+        }
+    };
+    sendToStreamDeck(json);
+}
+
+function setButtonImage(context, image) {
+    const json = {
+        event: 'setImage',
+        context: context,
+        payload: {
+            image: image,
+            target: 0
+        }
+    };
+    sendToStreamDeck(json);
+}
+
+function sendToStreamDeck(json) {
+    if (streamDeckWebSocket && streamDeckWebSocket.readyState === WebSocket.OPEN) {
+        streamDeckWebSocket.send(JSON.stringify(json));
+    }
+}
+
+// Heartbeat to keep connection alive
+function startHeartbeat() {
+    heartbeatInterval = setInterval(() => {
+        if (neetsWebSocket && neetsWebSocket.readyState === WebSocket.OPEN) {
+            sendNEETSCommand({ action: 'ping' });
+        }
+    }, 30000); // 30 seconds
+}
+
+function stopHeartbeat() {
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+    }
+}
+
+// Get default host (try to detect Raspberry Pi on network)
+function getDefaultHost() {
+    // Default to localhost, but could be enhanced to scan for Pi
+    return 'localhost';
+}
+
+// Logging function
+function log(...args) {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] NEETS Plugin:`, ...args);
+    
+    if (debugMode) {
+        const debugEl = document.getElementById('debug');
+        if (debugEl) {
+            debugEl.style.display = 'block';
+            debugEl.textContent = args.join(' ');
+        }
+    }
+}
+
+// Cleanup on unload
+window.addEventListener('beforeunload', function() {
+    disconnectFromNEETS();
+    stopHeartbeat();
 });
 
-streamDeck.onDisconnected(() => {
-    console.log('Stream Deck disconnected');
-    if (websocket) {
-        websocket.close();
-    }
-    if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-    }
-});
+// Make function available globally for Stream Deck
+if (typeof window !== 'undefined') {
+    window.connectElgatoStreamDeckSocket = connectElgatoStreamDeckSocket;
+}
 
-// Periodic status update
-setInterval(() => {
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        sendMessage({ action: 'get_state' });
-    }
-}, 10000); // Update every 10 seconds
-
-export default streamDeck;
+// Initialize
+log('🚀 NEETS Bridge Plugin loaded and ready');
