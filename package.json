@@ -1,4 +1,3 @@
-cat > package.json << 'EOF'
 {
   "name": "neets-bridge",
   "version": "1.0.0",
@@ -19,4 +18,3 @@ cat > package.json << 'EOF'
   "author": "Danny \"The Digital Cub\" Keren",
   "license": "MIT"
 }
-EOF
