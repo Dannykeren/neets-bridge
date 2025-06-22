@@ -17,6 +17,9 @@
     "docker:compose": "docker-compose up -d",
     "docker:logs": "docker-compose logs -f neets-bridge",
     "health": "node healthcheck.js"
+    "build-plugin": "cd stream-deck-plugin && node build.js",
+    "install-plugin": "npm run build-plugin && npm run copy-plugin", 
+    "copy-plugin": "node scripts/install-plugin.js"
   },
   "keywords": [
     "neets",
@@ -27,8 +30,6 @@
     "audio",
     "control"
   ],
-  "author": "Danny Keren",
-  "license": "MIT",
   "dependencies": {
     "ws": "^8.14.2",
     "express": "^4.18.2",
@@ -52,6 +53,7 @@
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.1.1"
+    "archiver": "^5.3.1"
   },
   "engines": {
     "node": ">=16.0.0",
