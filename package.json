@@ -1,7 +1,7 @@
 {
   "name": "neets-bridge",
   "author": "Danny \"The Digital Cub\" Keren",
-  "license": "MIT"
+  "license": "MIT",
   "version": "2.0.0",
   "description": "WebSocket bridge for NEETS Amp 2:25 with Stream Deck integration and comprehensive feedback support",
   "main": "server.js",
