@@ -1,5 +1,3 @@
-markdown
-
 # Neets Audio Amplifier Bridge
 
 A Docker-based bridge server that enables Stream Deck control of Neets (BiAmp) Audio Amplifiers.
