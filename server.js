@@ -364,10 +364,12 @@ class NeetsAmpDirectBridge {
                     break;
                 case 'power_toggle':
                     this.sendToNeets(this.deviceState.power ? 'POWER=OFF' : 'POWER=ON');
+                    setTimeout(() => this.sendToNeets('POWER=?'), 250);
                     break;
                 case 'source_select':
                     if (data.source >= 1 && data.source <= 5) {
                         this.sendToNeets(`INPUT=${data.source}`);
+                        setTimeout(() => this.sendToNeets('INPUT=?'), 250);
                     }
                     break;
                 case 'volume_up':
