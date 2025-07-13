@@ -22,63 +22,19 @@
   "DefaultWindowSize": [500, 650],
   "Actions": [
     {
-      "UUID": "com.neets.bridge.connection",
-      "Name": "Connection Toggle",
-      "Icon": "images/connection@2x",
-      "PropertyInspectorPath": "property-inspector.html",
-      "Tooltip": "Connect/Disconnect to NEETS Amp (for debugging)",
-      "SupportedInMultiActions": true,
-      "States": [
-        {
-          "Image": "images/connection-off@2x",
-          "Name": "Disconnected"
-        },
-        {
-          "Image": "images/connection-on@2x", 
-          "Name": "Connected"
-        }
-      ]
-    },
-    {
-      "UUID": "com.neets.bridge.connect",
-      "Name": "Connect",
-      "Icon": "images/connect@2x",
-      "PropertyInspectorPath": "property-inspector.html",
-      "Tooltip": "Connect to NEETS Amp",
-      "SupportedInMultiActions": true,
-      "States": [
-        {
-          "Image": "images/connect@2x"
-        }
-      ]
-    },
-    {
-      "UUID": "com.neets.bridge.disconnect",
-      "Name": "Disconnect",
-      "Icon": "images/disconnect@2x",
-      "PropertyInspectorPath": "property-inspector.html",
-      "Tooltip": "Disconnect from NEETS Amp",
-      "SupportedInMultiActions": true,
-      "States": [
-        {
-          "Image": "images/disconnect@2x"
-        }
-      ]
-    },
-    {
       "UUID": "com.neets.bridge.power",
       "Name": "Power Control",
-      "Icon": "images/power@2x",
+      "Icon": "images/power",
       "PropertyInspectorPath": "property-inspector.html",
       "Tooltip": "Toggle NEETS Amp power on/off",
       "SupportedInMultiActions": true,
       "States": [
         {
-          "Image": "images/power-off@2x",
+          "Image": "images/power-off",
           "Name": "Power Off"
         },
         {
-          "Image": "images/power-on@2x", 
+          "Image": "images/power-on", 
           "Name": "Power On"
         }
       ]
@@ -86,30 +42,30 @@
     {
       "UUID": "com.neets.bridge.volume",
       "Name": "Volume Control",
-      "Icon": "images/volume@2x",
+      "Icon": "images/volume",
       "PropertyInspectorPath": "property-inspector.html",
       "Tooltip": "Adjust NEETS Amp volume up/down",
       "SupportedInMultiActions": true,
       "States": [
         {
-          "Image": "images/volume@2x"
+          "Image": "images/volume"
         }
       ]
     },
     {
       "UUID": "com.neets.bridge.mute",
       "Name": "Mute Control", 
-      "Icon": "images/mute@2x",
+      "Icon": "images/mute",
       "PropertyInspectorPath": "property-inspector.html",
       "Tooltip": "Toggle NEETS Amp mute on/off",
       "SupportedInMultiActions": true,
       "States": [
         {
-          "Image": "images/mute-off@2x",
+          "Image": "images/mute-off",
           "Name": "Unmuted"
         },
         {
-          "Image": "images/mute-on@2x",
+          "Image": "images/mute-on",
           "Name": "Muted"
         }
       ]
@@ -117,39 +73,49 @@
     {
       "UUID": "com.neets.bridge.source",
       "Name": "Source Selection",
-      "Icon": "images/source@2x", 
+      "Icon": "images/source", 
       "PropertyInspectorPath": "property-inspector.html",
       "Tooltip": "Select NEETS Amp input source (1-5)",
       "SupportedInMultiActions": true,
       "States": [
         {
-          "Image": "images/source@2x"
+          "Image": "images/source-off",
+          "Name": "Source Inactive"
+        },
+        {
+          "Image": "images/source-on",
+          "Name": "Source Active"
         }
       ]
     },
     {
       "UUID": "com.neets.bridge.status",
       "Name": "Status Display",
-      "Icon": "images/status@2x",
+      "Icon": "images/status",
       "PropertyInspectorPath": "property-inspector.html", 
       "Tooltip": "Display NEETS Amp connection and status info",
       "SupportedInMultiActions": false,
       "States": [
         {
-          "Image": "images/status@2x"
+          "Image": "images/status"
         }
       ]
     },
     {
       "UUID": "com.neets.bridge.mix",
       "Name": "Mix Control",
-      "Icon": "images/mix@2x",
+      "Icon": "images/mix",
       "PropertyInspectorPath": "property-inspector.html",
       "Tooltip": "Toggle NEETS Amp mix mode",
       "SupportedInMultiActions": true,
       "States": [
         {
-          "Image": "images/mix@2x"
+          "Image": "images/mix-off",
+          "Name": "Mix Off"
+        },
+        {
+          "Image": "images/mix-on",
+          "Name": "Mix On"
         }
       ]
     }
