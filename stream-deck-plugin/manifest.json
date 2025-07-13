@@ -22,50 +22,6 @@
   "DefaultWindowSize": [500, 650],
   "Actions": [
     {
-      "UUID": "com.neets.bridge.connection",
-      "Name": "Connection Toggle",
-      "Icon": "images/connection@2x",
-      "PropertyInspectorPath": "property-inspector.html",
-      "Tooltip": "Connect/Disconnect to NEETS Amp (for debugging)",
-      "SupportedInMultiActions": true,
-      "States": [
-        {
-          "Image": "images/connection-off@2x",
-          "Name": "Disconnected"
-        },
-        {
-          "Image": "images/connection-on@2x", 
-          "Name": "Connected"
-        }
-      ]
-    },
-    {
-      "UUID": "com.neets.bridge.connect",
-      "Name": "Connect",
-      "Icon": "images/connect@2x",
-      "PropertyInspectorPath": "property-inspector.html",
-      "Tooltip": "Connect to NEETS Amp",
-      "SupportedInMultiActions": true,
-      "States": [
-        {
-          "Image": "images/connect@2x"
-        }
-      ]
-    },
-    {
-      "UUID": "com.neets.bridge.disconnect",
-      "Name": "Disconnect",
-      "Icon": "images/disconnect@2x",
-      "PropertyInspectorPath": "property-inspector.html",
-      "Tooltip": "Disconnect from NEETS Amp",
-      "SupportedInMultiActions": true,
-      "States": [
-        {
-          "Image": "images/disconnect@2x"
-        }
-      ]
-    },
-    {
       "UUID": "com.neets.bridge.power",
       "Name": "Power Control",
       "Icon": "images/power@2x",
