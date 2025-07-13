@@ -21,6 +21,52 @@
   "PropertyInspectorPath": "property-inspector.html",
   "DefaultWindowSize": [500, 650],
   "Actions": [
+  // ADD these 3 actions to your manifest.json Actions array:
+
+    {
+      "UUID": "com.neets.bridge.connection",
+      "Name": "Connection Toggle",
+      "Icon": "images/connection",
+      "PropertyInspectorPath": "property-inspector.html",
+      "Tooltip": "Connect/Disconnect to NEETS Amp (for debugging)",
+      "SupportedInMultiActions": true,
+      "States": [
+        {
+          "Image": "images/connection-off",
+          "Name": "Disconnected"
+        },
+        {
+          "Image": "images/connection-on", 
+          "Name": "Connected"
+        }
+      ]
+    },
+    {
+      "UUID": "com.neets.bridge.connect",
+      "Name": "Connect",
+      "Icon": "images/connect",
+      "PropertyInspectorPath": "property-inspector.html",
+      "Tooltip": "Connect to NEETS Amp",
+      "SupportedInMultiActions": true,
+      "States": [
+        {
+          "Image": "images/connect"
+        }
+      ]
+    },
+    {
+      "UUID": "com.neets.bridge.disconnect",
+      "Name": "Disconnect",
+      "Icon": "images/disconnect",
+      "PropertyInspectorPath": "property-inspector.html",
+      "Tooltip": "Disconnect from NEETS Amp",
+      "SupportedInMultiActions": true,
+      "States": [
+        {
+          "Image": "images/disconnect"
+        }
+      ]
+    }
     {
       "UUID": "com.neets.bridge.power",
       "Name": "Power Control",
