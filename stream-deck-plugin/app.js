@@ -96,6 +96,20 @@ function handleKeyDown(jsonObj) {
     const settings = jsonObj.payload?.settings || {};
     
     log(`🔽 Button pressed: ${action}`);
+  
+    switch(action) {
+        case 'com.neets.bridge.connection':
+            sendNEETSCommand({ action: 'connection_toggle' });
+            return;
+            
+        case 'com.neets.bridge.connect':
+            sendNEETSCommand({ action: 'connect' });
+            return;
+            
+        case 'com.neets.bridge.disconnect':
+            sendNEETSCommand({ action: 'disconnect' });
+            return;
+    }
     
     // Ensure NEETS connection
     ensureNEETSConnection(settings);
@@ -303,8 +317,14 @@ function handleNEETSMessage(data) {
         currentState = { ...currentState, ...data.state };
         updateAllButtons();
     } else if (data.type === 'response') {
-        // Handle specific responses
+        if (['connect', 'disconnect', 'connection_toggle'].includes(data.action)) {
+            if (data.newState) {
+                currentState.connected = data.newState === 'connected';
+            }
+            updateAllButtons();
+        }
         log('📋 NEETS Response:', data);
+        // Handle specific responses
     } else if (data.type === 'error') {
         log('❌ NEETS Error:', data.message);
     }
@@ -321,6 +341,15 @@ function updateAllButtons() {
 // Update specific button based on current state
 function updateButton(context, action, settings) {
     switch(action) {
+        case 'com.neets.bridge.connection':
+            updateConnectionToggleButton(context);
+            break;
+        case 'com.neets.bridge.connect':
+            updateConnectButton(context);
+            break;
+        case 'com.neets.bridge.disconnect':
+            updateDisconnectButton(context);
+            break;    
         case 'com.neets.bridge.power':
             updatePowerButton(context);
             break;
@@ -341,6 +370,29 @@ function updateButton(context, action, settings) {
             break;
     }
 }
+
+function updateConnectionToggleButton(context) {
+    const connected = currentState.connected || false;
+    const state = connected ? 1 : 0;
+    const title = connected ? 'CONN' : 'DISC';
+    
+    setButtonState(context, state);
+    setButtonTitle(context, title);
+}
+
+function updateConnectButton(context) {
+    const connected = currentState.connected || false;
+    const title = connected ? 'CONN\n✓' : 'CONN\n○';
+    
+    setButtonTitle(context, title);
+}
+
+function updateDisconnectButton(context) {
+    const connected = currentState.connected || false;
+    const title = connected ? 'DISC\n○' : 'DISC\n✓';
+    
+    setButtonTitle(context, title);
+}    
 
 // Update power button
 function updatePowerButton(context) {
