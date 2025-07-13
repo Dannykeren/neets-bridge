@@ -371,7 +371,6 @@ function updateButton(context, action, settings) {
     }
 }
 
-
 function updateConnectionToggleButton(context) {
     const connected = currentState.connected || false;
     const state = connected ? 1 : 0;
@@ -394,6 +393,7 @@ function updateDisconnectButton(context) {
     
     setButtonTitle(context, title);
 }    
+
 // Update power button
 function updatePowerButton(context) {
     const state = currentState.power ? 1 : 0;
