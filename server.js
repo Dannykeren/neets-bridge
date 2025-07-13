@@ -11,6 +11,7 @@ class NeetsAmpDirectBridge {
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 10;
         this.reconnectDelay = 5000;
+        this.isManuallyDisconnected = false; // Track manual disconnection
         
         // Current device state from NEETS amp feedback
         this.deviceState = {
@@ -97,6 +98,50 @@ class NeetsAmpDirectBridge {
         console.log(`WebSocket server listening on port ${this.config.wsPort}`);
     }
     
+    manualConnect() {
+        if (this.isConnected) {
+            return { success: false, message: 'Already connected' };
+        }
+        this.isManuallyDisconnected = false;
+        this.connectToNeets();
+        this.startPolling();
+        return { success: true, message: 'Connection initiated' };
+    }
+    
+    manualDisconnect() {
+        if (!this.isConnected) {
+            return { success: false, message: 'Already disconnected' };
+        }
+        this.isManuallyDisconnected = true;
+        this.disconnectFromNeets();
+        return { success: true, message: 'Disconnected successfully' };
+    }
+    
+    toggleConnection() {
+        if (this.isConnected) {
+            return this.manualDisconnect();
+        } else {
+            return this.manualConnect();
+        }
+    }
+    
+    disconnectFromNeets() {
+        console.log('Manually disconnecting from NEETS Amp...');
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+            this.pollTimer = null;
+        }
+        if (this.neetsClient) {
+            this.neetsClient.destroy();
+            this.neetsClient = null;
+        }
+        this.isConnected = false;
+        this.deviceState.connected = false;
+        this.reconnectAttempts = 0;
+        this.broadcastStateUpdate();
+        console.log('✅ Disconnected from NEETS Amp');
+    }
+    
     connectToNeets() {
         if (this.neetsClient) {
             this.neetsClient.destroy();
@@ -137,6 +182,10 @@ class NeetsAmpDirectBridge {
     }
     
     scheduleReconnect() {
+        if (this.isManuallyDisconnected) {
+            console.log('Skipping reconnect - manually disconnected');
+            return;
+        }
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
             console.log(`Attempting to reconnect in ${this.reconnectDelay/1000}s (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
@@ -346,6 +395,58 @@ class NeetsAmpDirectBridge {
     }
     
     handleWebSocketMessage(data, ws) {
+     if (['connect', 'disconnect', 'connection_toggle', 'connection_status'].includes(data.action)) {
+        try {
+            switch (data.action) {
+                case 'connect':
+                    const connectResult = this.manualConnect();
+                    ws.send(JSON.stringify({ 
+                        type: 'response', 
+                        action: 'connect',
+                        ...connectResult
+                    }));
+                    break;
+                    
+                case 'disconnect':
+                    const disconnectResult = this.manualDisconnect();
+                    ws.send(JSON.stringify({ 
+                        type: 'response', 
+                        action: 'disconnect',
+                        ...disconnectResult
+                    }));
+                    break;
+                    
+                case 'connection_toggle':
+                    const toggleResult = this.toggleConnection();
+                    ws.send(JSON.stringify({ 
+                        type: 'response', 
+                        action: 'connection_toggle',
+                        ...toggleResult,
+                        newState: this.isConnected ? 'connected' : 'disconnected'
+                    }));
+                    break;
+                    
+                case 'connection_status':
+                    ws.send(JSON.stringify({ 
+                        type: 'response', 
+                        action: 'connection_status',
+                        connected: this.isConnected,
+                        manuallyDisconnected: this.isManuallyDisconnected,
+                        host: this.config.neetsHost,
+                        port: this.config.neetsPort
+                    }));
+                    break;
+            }
+        } catch (error) {
+            console.error('Error handling connection command:', error);
+            ws.send(JSON.stringify({ 
+                type: 'error', 
+                message: 'Internal server error' 
+            }));
+        }
+        return; // Important: exit early for connection commands
+    }
+
         if (!this.isConnected) {
             ws.send(JSON.stringify({ 
                 type: 'error', 
@@ -539,6 +640,9 @@ class NeetsAmpDirectBridge {
     }
     
     startPolling() {
+         if (this.pollTimer || this.isManuallyDisconnected) {
+            return;
+        }
         // Poll status every 5 seconds to keep state updated
         this.pollTimer = setInterval(() => {
             if (this.isConnected) {
