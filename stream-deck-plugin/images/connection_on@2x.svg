@@ -1,0 +1,31 @@
+<svg width="144" height="144" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="connectionOnGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#27AE60;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#229954;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="72" cy="72" r="68" fill="url(#connectionOnGrad)" stroke="#1E8449" stroke-width="2"/>
+  
+  <!-- Connected circles -->
+  <circle cx="55" cy="72" r="12" fill="none" stroke="white" stroke-width="3"/>
+  <circle cx="89" cy="72" r="12" fill="none" stroke="white" stroke-width="3"/>
+  
+  <!-- Strong connection line -->
+  <line x1="67" y1="72" x2="77" y2="72" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Signal strength indicators -->
+  <path d="M 38 72 Q 46 63 55 72 Q 46 81 38 72" fill="none" stroke="white" stroke-width="2" opacity="0.9"/>
+  <path d="M 106 72 Q 98 63 89 72 Q 98 81 106 72" fill="none" stroke="white" stroke-width="2" opacity="0.9"/>
+  <path d="M 32 72 Q 43 58 55 72 Q 43 86 32 72" fill="none" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <path d="M 112 72 Q 101 58 89 72 Q 101 86 112 72" fill="none" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  
+  <!-- Connection dots -->
+  <circle cx="55" cy="72" r="4" fill="white"/>
+  <circle cx="89" cy="72" r="4" fill="white"/>
+  
+  <!-- Status indicator -->
+  <circle cx="72" cy="50" r="3" fill="white" opacity="0.8"/>
+</svg>

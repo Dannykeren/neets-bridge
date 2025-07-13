@@ -1,0 +1,35 @@
+<svg width="144" height="144" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="disconnectGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E74C3C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C0392B;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="72" cy="72" r="68" fill="url(#disconnectGrad)" stroke="#A93226" stroke-width="2"/>
+  
+  <!-- Disconnected plug -->
+  <rect x="35" y="60" width="25" height="24" rx="3" fill="white" stroke="none"/>
+  <rect x="32" y="66" width="6" height="4" rx="1" fill="white"/>
+  <rect x="32" y="74" width="6" height="4" rx="1" fill="white"/>
+  
+  <!-- Disconnected socket -->
+  <rect x="84" y="60" width="25" height="24" rx="3" fill="none" stroke="white" stroke-width="3"/>
+  <circle cx="91" cy="68" r="2" fill="white"/>
+  <circle cx="91" cy="76" r="2" fill="white"/>
+  <circle cx="102" cy="68" r="2" fill="white"/>
+  <circle cx="102" cy="76" r="2" fill="white"/>
+  
+  <!-- Disconnection arrow -->
+  <path d="M 60 72 L 64 72" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 62 70 L 60 72 L 62 74" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+  
+  <!-- Gap between plug and socket -->
+  <path d="M 68 65 Q 72 68 76 65" stroke="white" stroke-width="1.5" stroke-dasharray="2,2" fill="none" opacity="0.7"/>
+  <path d="M 68 79 Q 72 76 76 79" stroke="white" stroke-width="1.5" stroke-dasharray="2,2" fill="none" opacity="0.7"/>
+  
+  <!-- Action indicator -->
+  <path d="M 72 45 L 67 50 L 72 55" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <text x="72" y="40" font-family="Arial, sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="white">DISCONNECT</text>
+</svg>

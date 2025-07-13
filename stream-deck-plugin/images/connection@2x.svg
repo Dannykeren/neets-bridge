@@ -1,0 +1,26 @@
+<svg width="144" height="144" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="connectionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357ABD;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="72" cy="72" r="68" fill="url(#connectionGrad)" stroke="#2C5F8A" stroke-width="2"/>
+  
+  <!-- Connection symbol - two overlapping circles with signal waves -->
+  <circle cx="55" cy="72" r="12" fill="none" stroke="white" stroke-width="3"/>
+  <circle cx="89" cy="72" r="12" fill="none" stroke="white" stroke-width="3"/>
+  
+  <!-- Signal waves -->
+  <path d="M 40 72 Q 47 65 55 72 Q 47 79 40 72" fill="none" stroke="white" stroke-width="2.5" opacity="0.8"/>
+  <path d="M 104 72 Q 97 65 89 72 Q 97 79 104 72" fill="none" stroke="white" stroke-width="2.5" opacity="0.8"/>
+  
+  <!-- Center connection line -->
+  <line x1="67" y1="72" x2="77" y2="72" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Small connection dots -->
+  <circle cx="55" cy="72" r="3" fill="white"/>
+  <circle cx="89" cy="72" r="3" fill="white"/>
+</svg>
