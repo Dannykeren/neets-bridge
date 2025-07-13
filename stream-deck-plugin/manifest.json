@@ -3,7 +3,9 @@
   "Description": "Professional control for NEETS Amp systems with real-time feedback",
   "Author": "NEETS Bridge Project",
   "Version": "1.0.0",
-  "SDKVersion": 6,
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.6"
   "OS": [
     {
       "Platform": "windows", 
