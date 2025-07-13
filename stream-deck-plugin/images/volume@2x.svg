@@ -1,0 +1,7 @@
+<svg width="144" height="144" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg">
+  <rect width="144" height="144" rx="8" fill="#007bff"/>
+  <polygon points="45,55 45,89 60,89 80,105 80,39 60,55" fill="#ffffff"/>
+  <path d="M90 50 Q100 60 100 72 Q100 84 90 94" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M100 40 Q115 55 115 72 Q115 89 100 104" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <text x="72" y="130" fill="#ffffff" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold">VOL</text>
+</svg>
