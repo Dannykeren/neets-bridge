@@ -70,7 +70,23 @@ docker-compose exec neets-bridge npm run health
 ```
 
 ### 5. Install Stream Deck Plugin
-
+🐳 Build Plugin on RPi Container:
+1. SSH to RPi:
+bashssh admin@192.168.10.106
+2. Access the container:
+bashdocker exec -it neets-bridge sh
+3. Navigate to plugin folder:
+bashcd /app/stream-deck-plugin
+4. Build the plugin:
+bashnode build.js
+5. Exit container:
+bashexit
+6. Copy to RPi downloads:
+bashdocker cp neets-bridge:/app/stream-deck-plugin/build/com.neets.bridge.sdPlugin ~/Downloads/
+7. Exit RPi:
+bashexit
+8. Copy to your Mac:
+bashscp admin@192.168.10.106:~/Downloads/com.neets.bridge.sdPlugin ~/Downloads/
 1. Copy the plugin folder to Stream Deck plugins directory:
    - **Windows**: `%appdata%\Elgato\StreamDeck\Plugins\`
    - **macOS**: `~/Library/Application Support/com.elgato.StreamDeck/Plugins/`
