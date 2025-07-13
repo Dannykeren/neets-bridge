@@ -21,8 +21,6 @@
   "PropertyInspectorPath": "property-inspector.html",
   "DefaultWindowSize": [500, 650],
   "Actions": [
-  // ADD these 3 actions to your manifest.json Actions array:
-
     {
       "UUID": "com.neets.bridge.connection",
       "Name": "Connection Toggle",
@@ -66,7 +64,7 @@
           "Image": "images/disconnect"
         }
       ]
-    }
+    },
     {
       "UUID": "com.neets.bridge.power",
       "Name": "Power Control",
