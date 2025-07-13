@@ -33,6 +33,8 @@ jobs:
       run: |
         cd stream-deck-plugin
         node build.js
+        # Rename to proper extension
+        mv build/com.neets.bridge.sdPlugin build/com.neets.bridge.streamDeckPlugin
         
     - name: Create Release
       if: github.ref == 'refs/heads/main'
@@ -44,7 +46,7 @@ jobs:
           🎛️ Auto-built Stream Deck Plugin
           
           **Installation:**
-          1. Download the .sdPlugin file below
+          1. Download the .streamDeckPlugin file below
           2. Double-click to install
           3. Restart Stream Deck software
           
@@ -52,7 +54,7 @@ jobs:
           - Connection Toggle button
           - Connect button  
           - Disconnect button
-        files: stream-deck-plugin/build/com.neets.bridge.sdPlugin
+        files: stream-deck-plugin/build/com.neets.bridge.streamDeckPlugin
         draft: false
         prerelease: false
       env:
@@ -63,4 +65,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: neets-bridge-plugin
-        path: stream-deck-plugin/build/com.neets.bridge.sdPlugin
+        path: stream-deck-plugin/build/com.neets.bridge.streamDeckPlugin
