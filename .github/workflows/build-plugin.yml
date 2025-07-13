@@ -1,0 +1,73 @@
+name: Build Stream Deck Plugin
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        cd stream-deck-plugin
+        npm install archiver
+        
+    - name: Build plugin
+      run: |
+        cd stream-deck-plugin
+        node build.js
+        
+    - name: Create Release
+      if: github.ref == 'refs/heads/main'
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: NEETS Bridge Plugin v${{ github.run_number }}
+        body: |
+          🎛️ Auto-built Stream Deck Plugin
+          
+          **Installation:**
+          1. Download the .sdPlugin file below
+          2. Double-click to install
+          3. Restart Stream Deck software
+          
+          **New Features:**
+          - Connection Toggle button
+          - Connect button  
+          - Disconnect button
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload Release Asset
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: stream-deck-plugin/build/com.neets.bridge.sdPlugin
+        asset_name: com.neets.bridge.sdPlugin
+        asset_content_type: application/octet-stream
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload artifact (for PRs)
+      if: github.ref != 'refs/heads/main'
+      uses: actions/upload-artifact@v4
+      with:
+        name: neets-bridge-plugin
+        path: stream-deck-plugin/build/com.neets.bridge.sdPlugin
